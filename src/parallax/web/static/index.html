@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="afterglow">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Parallax — Ganymede</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="shell">
+<aside class="sidebar" id="sidebar">
+<a class="brand" href="/" aria-label="Parallax 首页"><span class="brand-mark" aria-hidden="true">Ⅱ</span><span>parallax</span></a>
+<button id="new-chat" class="new-button"><span>新对话</span><span aria-hidden="true">＋</span></button>
+<div class="section-label"><span>对话记录</span><span id="conversation-count">00</span></div>
+<label class="search"><span class="sr-only">搜索对话</span><input id="chat-search" type="search" placeholder="搜索对话…"></label>
+<nav id="conversations" aria-label="对话列表"></nav>
+<footer class="sidebar-footer"><button id="settings-open" class="settings-button"><span aria-hidden="true">⚙</span> 设置与扩展 <span class="shortcut">↗</span></button><div class="local-status"><i></i><span>本地工作区</span><span class="mono">v0.3</span></div></footer>
+</aside>
+<main class="workspace">
+<header class="topbar"><button class="icon-button mobile-toggle" id="menu-toggle" aria-label="展开会话导航" aria-expanded="false">☰</button><div class="breadcrumb"><span>工作台</span><span class="slash">/</span><h1 id="chat-title">新对话</h1></div><span id="run-state" class="run-state">就绪</span></header>
+<div class="work-body">
+<section class="conversation-pane">
+<div id="messages" class="messages" aria-label="对话内容" tabindex="0"></div>
+<div class="compose-area"><form id="composer" class="composer">
+<div id="attachments" class="attachment-list"></div><label class="sr-only" for="message">分析任务</label>
+<textarea id="message" rows="3" maxlength="20000" placeholder="描述问题，或添加需要分析的样本…" required></textarea>
+<div class="composer-actions"><button type="button" class="attach-button" id="attach-button"><span aria-hidden="true">＋</span> 添加样本</button><input id="file" type="file" hidden><span id="composer-model" class="model-label">未配置模型</span><button id="send" class="send" type="submit" aria-label="发送任务">发送 <span aria-hidden="true">↗</span></button></div>
+</form><div class="composer-note"><span>Ctrl / ⌘ + Enter 发送</span><span id="attachment-count">单文件上限 64 MiB</span></div></div>
+</section>
+<aside class="context-panel" aria-label="当前上下文">
+<div class="section-label"><span>上下文</span><span class="mono">01</span></div>
+<section><h2>参考对话 <span id="reference-count">0</span></h2><div id="references" class="context-list"></div></section>
+<section><h2>启用的 Skill <span id="skill-count">0</span></h2><div id="active-skills" class="context-list"></div><button class="text-button" id="skills-open">管理扩展 ↗</button></section>
+<section><h2>全局记忆 <span id="memory-count">0</span></h2><p class="quiet">跨对话保留有用的偏好与事实。</p><button class="text-button" id="memory-open">查看记忆 ↗</button></section>
+</aside>
+</div>
+</main>
+</div>
+<div id="notice" class="notice" role="status" aria-live="polite" hidden></div>
+<dialog id="new-dialog" aria-labelledby="new-heading">
+<form id="new-form"><header class="dialog-header"><div><span class="eyebrow">NEW CONVERSATION</span><h2 id="new-heading">从这里开始</h2></div><button type="button" class="icon-button" data-close="new-dialog" aria-label="关闭新建对话">×</button></header>
+<label class="field">对话名称<input id="new-title" maxlength="120" placeholder="例如：ELF 保护机制分析"></label>
+<fieldset><legend>参考对话 <span class="quiet">可多选</span></legend><div id="reference-options" class="check-list"></div></fieldset>
+<div class="dialog-actions"><button type="button" class="secondary" data-close="new-dialog">取消</button><button id="new-confirm" class="primary" type="submit">创建对话 ↗</button></div></form>
+</dialog>
+<dialog id="settings" class="settings-dialog" aria-labelledby="settings-heading">
+<header class="dialog-header"><div><span class="eyebrow">PREFERENCES</span><h2 id="settings-heading">设置与扩展</h2></div><button type="button" class="icon-button" data-close="settings" aria-label="关闭设置">×</button></header>
+<div class="settings-layout"><nav class="settings-nav" aria-label="设置分类">
+<button type="button" data-tab="connection" aria-current="page">模型连接 <span>01</span></button><button type="button" data-tab="appearance">界面外观 <span>02</span></button><button type="button" data-tab="skills">Skills <span>03</span></button><button type="button" data-tab="agents">Agents <span>04</span></button><button type="button" data-tab="memory">全局记忆 <span>05</span></button></nav>
+<form id="settings-form" class="settings-content">
+<section data-panel="connection"><h3>模型连接</h3><p class="section-description">连接兼容 OpenAI 协议的模型服务。</p>
+<label class="field">API key<input id="api-key" type="password" autocomplete="off" placeholder="仅保存在当前浏览器会话"></label>
+<label class="field">接口地址<input id="base-url" type="url" placeholder="https://api.deepseek.com"></label>
+<div class="model-row"><label class="field">模型<input id="model" list="model-options" maxlength="512" placeholder="自动检测，或手动输入"><datalist id="model-options"></datalist></label><button type="button" id="detect-models" class="secondary">检测模型</button></div><p id="model-status" class="field-hint" role="status">输入 API key 后自动检测，也可直接填写模型 ID。</p><label class="field"><span><input id="multi-agent" type="checkbox"> 启用 Ganymede 多 Agent</span></label><label class="field">最大 Agent 数<select id="max-agents"><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="6">6</option><option value="8">8</option></select></label><p class="field-hint">当前版本采用串行、有界委派；所有子 Agent 共享运行总预算。</p></section>
+<section data-panel="appearance" hidden><h3>界面外观</h3><p class="section-description">按你的阅读习惯，选择工作台的底色。</p><label class="field">配色方案<select id="theme"><option value="afterglow">Afterglow · 余晖</option><option value="dark">Graphite · 石墨</option><option value="light">Paper · 纸白</option></select></label><div class="theme-specimen"><span class="eyebrow">TYPE SPECIMEN / Aa</span><p>Clarity in every detail.</p><code>0x00401000 · main()</code><div class="swatches"><i></i><i></i><i></i><i></i></div></div><p class="field-hint">界面 Lexend · 代码 Consolas</p></section>
+<section data-panel="skills" hidden><h3>Skills</h3><p class="section-description">为分析过程添加可复用的指导。</p><fieldset><legend>已安装</legend><div id="skill-options" class="check-list"></div></fieldset><details class="skill-editor"><summary>＋ 添加 Skill</summary><label class="field">名称<input id="skill-name" maxlength="64" placeholder="elf-triage"></label><label class="field">Markdown 内容<textarea id="skill-content" rows="6" placeholder="描述适用场景、分析步骤与输出要求…"></textarea></label><button type="button" id="skill-save" class="secondary">添加 Skill</button></details></section>
+<section data-panel="agents" hidden><h3>自定义 Agents</h3><p class="section-description">添加声明式 Agent Profile；必须启用多 Agent 模式后才能使用。</p><fieldset><legend>已安装</legend><div id="agent-options" class="check-list"></div></fieldset><details class="skill-editor"><summary>＋ 添加 Agent</summary><label class="field">配置名称<input id="agent-name" maxlength="64" placeholder="my-reverse"></label><label class="field">Agent TOML<textarea id="agent-content" rows="12" placeholder="[agent]&#10;role = &quot;my-reverse&quot;&#10;description = &quot;Focused reverse specialist&quot;&#10;system_prompt = &quot;Complete only the delegated objective.&quot;&#10;default_capabilities = [&quot;binary.inspect&quot;]&#10;allowed_capabilities = [&quot;binary.inspect&quot;]"></textarea></label><button type="button" id="agent-save" class="secondary">添加 Agent</button></details></section>
+<section data-panel="memory" hidden><h3>全局记忆</h3><p class="section-description">模型从当前消息中选取值得保留的原文。你可以随时删除。</p><div id="memory-list" class="memory-list"></div></section>
+<div class="settings-save-bar"><span id="settings-status" role="status"></span><button id="settings-save" class="primary" type="submit">保存设置</button></div>
+</form></div>
+</dialog>
+<script src="/app.js" type="module"></script>
+</body></html>

@@ -1,0 +1,40 @@
+[plugin]
+id = "ganymede-default"
+version = "1.0.0"
+runtime_api = "1"
+description = "Default bounded multi-agent behavior for Ganymede."
+permissions = ["binary.inspect"]
+
+[multiagent]
+coordinator_prompt_file = "coordinator.md"
+routing = "coordinator"
+scheduler = "serial"
+aggregation = "coordinator-evidence"
+
+[[agents]]
+role = "triage"
+description = "Classify the artifact and identify the safest high-value next checks."
+system_prompt_file = "triage.md"
+default_capabilities = ["binary.inspect"]
+allowed_capabilities = ["binary.inspect"]
+
+[[agents]]
+role = "reverse"
+description = "Analyze native binaries and validation logic with reproducible evidence."
+system_prompt_file = "reverse.md"
+default_capabilities = ["binary.inspect"]
+allowed_capabilities = ["binary.inspect"]
+
+[[agents]]
+role = "forensics"
+description = "Inspect metadata, embedded material, and provenance-relevant evidence."
+system_prompt_file = "forensics.md"
+default_capabilities = ["binary.inspect"]
+allowed_capabilities = ["binary.inspect"]
+
+[[agents]]
+role = "specialist"
+description = "Use explicitly requested run capabilities for a narrowly scoped analysis."
+system_prompt_file = "specialist.md"
+default_capabilities = ["binary.inspect"]
+capability_policy = "parent"

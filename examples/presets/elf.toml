@@ -1,0 +1,5 @@
+[preset]
+name = "elf-triage"
+plugins = ["elf-sections"]
+skills = ["elf-triage"]
+capabilities = ["elf.sections"]

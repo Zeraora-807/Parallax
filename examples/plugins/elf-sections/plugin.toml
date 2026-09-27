@@ -1,0 +1,32 @@
+[plugin]
+id = "elf-sections"
+version = "1.0.0"
+runtime_api = "1"
+description = "Adds a focused ELF section listing tool and analysis guidance."
+permissions = ["binary.inspect", "elf.sections"]
+
+[[tools]]
+name = "elf.sections"
+description = "List ELF section headers without dumping unrelated metadata."
+program = "readelf"
+capability = "elf.sections"
+schema_file = "sections.schema.json"
+artifact_fields = ["artifact_id"]
+fixed_arguments = ["--sections", "--wide", "--"]
+
+[skills]
+files = ["elf-triage.md"]
+
+[[agents]]
+role = "elf-reverse"
+description = "Inspect ELF headers and sections with focused reproducible evidence."
+system_prompt_file = "elf-reverse-agent.md"
+default_capabilities = ["binary.inspect", "elf.sections"]
+allowed_capabilities = ["binary.inspect", "elf.sections"]
+max_model_turns = 6
+max_tool_calls = 8
+max_tokens = 30000
+max_wall_seconds = 300
+
+[multiagent]
+coordinator_prompt_file = "elf-coordinator.md"
