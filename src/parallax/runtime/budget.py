@@ -141,18 +141,20 @@ class BudgetLease:
     def record_tokens(self, count: int) -> None:
         count = max(0, count)
         with self._lock:
-            if self.tokens + count > self.budget.max_total_tokens:
-                raise BudgetExceededError("agent token budget exhausted")
-            self.parent.record_tokens(count)
+            # Usage is already incurred. Charge every ancestor even when this
+            # response exceeds a child quota or an ancestor raises an error.
             self.tokens += count
+            self.parent.record_tokens(count)
+            if self.tokens > self.budget.max_total_tokens:
+                raise BudgetExceededError("agent token budget exhausted")
 
     def record_output_bytes(self, count: int) -> None:
         count = max(0, count)
         with self._lock:
-            if self.output_bytes + count > self.budget.max_output_bytes:
-                raise BudgetExceededError("agent output budget exhausted")
-            self.parent.record_output_bytes(count)
             self.output_bytes += count
+            self.parent.record_output_bytes(count)
+            if self.output_bytes > self.budget.max_output_bytes:
+                raise BudgetExceededError("agent output budget exhausted")
 
     def snapshot(self) -> dict[str, int | float]:
         return {

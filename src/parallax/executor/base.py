@@ -28,6 +28,15 @@ from parallax.errors import ExecutionTimeoutError, OutputLimitExceededError
 class Executor(ABC):
     required_capability: str
 
+    def resolve_cache_command(self, command: CommandSpec) -> CommandSpec | None:
+        """Return a command tied to immutable execution content, or disable caching.
+
+        Bare host program names do not identify their executable or dependencies.
+        Executors must opt in when they can resolve a reproducible environment.
+        """
+
+        return None
+
     @abstractmethod
     def execute(self, command: CommandSpec, workspace: Workspace) -> ExecutionResult: ...
 

@@ -46,6 +46,7 @@ from parallax.runtime import (
 )
 from parallax.runtime.engine import POLICY_VERSION
 from parallax.runtime.cache import CACHE_FORMAT_VERSION, SQLiteCacheStore
+from parallax.runtime.run_lock import RunLock
 from parallax.tools import ToolRegistry, builtin_binary_tools
 from parallax.tracing import SQLiteEventStore
 from parallax.ui import AfterglowArgumentParser, AfterglowUI
@@ -412,6 +413,13 @@ def _boot(arguments: argparse.Namespace) -> int:
 
 
 def _run(arguments: argparse.Namespace) -> int:
+    workspace = Workspace(arguments.workspace)
+    run_id = uuid.uuid4().hex
+    with RunLock(workspace.root / ".parallax" / "run-locks" / f"{run_id}.lock"):
+        return _run_locked(arguments, run_id)
+
+
+def _run_locked(arguments: argparse.Namespace, run_id: str) -> int:
     ui: AfterglowUI = arguments.ui
     if any("*" in capability for capability in arguments.allow):
         raise ValueError("CLI capabilities must be exact; wildcards are not accepted")
@@ -436,7 +444,6 @@ def _run(arguments: argparse.Namespace) -> int:
     generations = GenerationManager(state_root)
     Supervisor(generations, events).recover_unfinished_runs()
 
-    run_id = uuid.uuid4().hex
     budget_config = RunBudget(
         max_wall_seconds=arguments.max_seconds,
         max_tool_calls=arguments.max_tool_calls,

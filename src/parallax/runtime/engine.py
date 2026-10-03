@@ -95,7 +95,10 @@ class Runtime:
             if not isinstance(tool, InternalToolDefinition):
                 command = tool.prepare(resolved_arguments)
                 if self.cache is not None and tool.artifact_fields and not tool.path_fields:
-                    cache_key = self.cache.tool_key(self.cache_namespace, call.name, command)
+                    cache_command = self.executor.resolve_cache_command(command)
+                    if cache_command is not None:
+                        command = cache_command
+                        cache_key = self.cache.tool_key(self.cache_namespace, call.name, command)
             timeout = context.budget.reserve_tool_call()
             if cache_key is not None and self.cache is not None:
                 try:

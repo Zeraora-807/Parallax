@@ -10,6 +10,7 @@ import sys
 
 from parallax.errors import EvolutionError
 from parallax.generations.manager import Generation, GenerationManager
+from parallax.runtime.run_lock import RunAlreadyActiveError, RunLock
 from parallax.tracing.sqlite import SQLiteEventStore
 
 
@@ -43,15 +44,24 @@ class Supervisor:
         return generation
 
     def recover_unfinished_runs(self) -> list[str]:
-        recovered = list(self.events.unfinished_runs())
-        for run_id in recovered:
-            self.events.record(
-                run_id,
-                "run.recovered",
-                "interrupted",
-                {"reason_code": "supervisor_restart"},
-            )
-            self.events.finish_run(run_id, "interrupted")
+        recovered = []
+        for run_id in self.events.unfinished_runs():
+            try:
+                with RunLock(self.generations.state_root / "run-locks" / f"{run_id}.lock"):
+                    # The task may have completed since the initial query.
+                    run = self.events.run(run_id)
+                    if run is None or run["status"] != "running":
+                        continue
+                    self.events.record(
+                        run_id,
+                        "run.recovered",
+                        "interrupted",
+                        {"reason_code": "supervisor_restart"},
+                    )
+                    self.events.finish_run(run_id, "interrupted")
+                    recovered.append(run_id)
+            except RunAlreadyActiveError:
+                continue
         return recovered
 
     def launch(self, arguments: list[str], *, rollback_on_failure: bool = False) -> int:
