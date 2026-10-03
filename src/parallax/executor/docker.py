@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import re
 import shutil
 import subprocess
 import uuid
+from dataclasses import replace
 
 from parallax.core import CommandSpec, ExecutionResult
 from parallax.errors import ToolUnavailableError
@@ -33,6 +35,28 @@ class DockerExecutor(Executor):
         self.memory = memory
         self.cpus = cpus
         self.pids_limit = pids_limit
+
+    def resolve_cache_command(self, command: CommandSpec) -> CommandSpec | None:
+        docker = shutil.which("docker")
+        if docker is None:
+            return None
+        try:
+            inspected = subprocess.run(  # noqa: S603 - fixed Docker image inspection
+                [docker, "image", "inspect", "--format={{.Id}}", "--", command.image or self.image],
+                stdin=subprocess.DEVNULL,
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
+            )
+        except (OSError, subprocess.SubprocessError):
+            return None
+        image_id = inspected.stdout.strip()
+        if inspected.returncode or not re.fullmatch(r"sha256:[0-9a-f]{64}", image_id):
+            return None
+        # Execute this exact ID as well as keying the cache by it. A concurrent
+        # tag update must not change the environment after cache authorization.
+        return replace(command, image=image_id)
 
     def execute(self, command: CommandSpec, workspace: Workspace) -> ExecutionResult:
         docker = shutil.which("docker")
